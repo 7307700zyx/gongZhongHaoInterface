@@ -100,5 +100,4 @@ func main() {
 
 	log.Println("WECHAT API启动成功，监听中...")
 	server.ListenAndServe()
-
 }

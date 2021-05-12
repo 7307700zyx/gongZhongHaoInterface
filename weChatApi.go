@@ -1,77 +1,36 @@
 package main
 
 import (
-	"fmt"
 	tools "gitlab.wsmfin.com/DEV/GoLangTools"
 	"gongZhongHaoInterface/common"
 	consts "gongZhongHaoInterface/conf"
 	controller "gongZhongHaoInterface/controller"
-	"log"
 	"net/http"
 	"os"
 
 	//"strconv"
-	"time"
+	//"time"
 )
 
 var IpLast string
 
-var TimeStr string = time.Now().Format("2006-01-02")
-var MyLogger *log.Logger
-
-///**
-// * 查看是否开启
-// */
-//func PingPong(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte("PONG"))
-//	writeLogSimple("PingPong", "访问pingpong接口", true)
-//}
-//
-//func ShutDownHandle(w http.ResponseWriter, r *http.Request) {
-//	tools.ShutDownEXE()
-//	w.Write([]byte("success"))
-//	writeLogSimple("ShutDownHandle", "关闭计算机完毕", true)
-//}
-
-func ReShutDownHandle(w http.ResponseWriter, r *http.Request) {
-	//验证用户名密码，如果成功则header里返回session，失败则返回StatusUnauthorized状态码
-
-	w.WriteHeader(http.StatusOK)
-	if (r.Form.Get("user") == "admin") && (r.Form.Get("pass") == "888") {
-		w.Write([]byte("hello,验证成功！"))
-	} else {
-		w.Write([]byte("hello,验证失败了！"))
-	}
-}
+//var TimeStr string = time.Now().Format("2006-01-02")
+//var MyLogger *log.Logger
 
 func main() {
-
-	file, err := os.Create(consts.WECHAT_PATH + "\\" + consts.WECHAT_LOG + "_" + TimeStr + ".log")
-	if err != nil {
-		log.Fatalln("fail to create " + TimeStr + ".log")
-	}
-	MyLogger = log.New(file, "", log.Ldate|log.Ltime)
-
-	MyLogger.SetFlags(log.LstdFlags) // 设置写入文件的log日志的格式
-
-	res, localHost, err := tools.GetLocalIp()
+	tools.Logger = tools.WriteLogFile("./wx_blog", "")
+	res, localHost, _ := tools.GetLocalIp()
 	if res == false {
-		//fmt.Println("error,获取本机ip失败")
-		log.Println("error,获取本机ip失败")
-		MyLogger.Println("WECHAT API,error,获取本机ip失败")
+		tools.OutPutInfo(nil,"WECHAT API,error,获取本机ip失败")
 		return
 	}
 
 	server := http.Server{Addr: localHost + consts.WECHAT_PORT}
-	fmt.Println(localHost + consts.WECHAT_PORT)
-	//fmt.Println(localHost + consts.WECHAT_PORT)
-	log.Println(localHost + consts.WECHAT_PORT)
-	//fmt.Println("WECHAT API" + localHost + consts.WECHAT_PORT)
+	tools.OutPutInfo(nil,"WECHAT API" + localHost + consts.WECHAT_PORT)
 
-	log.Println("WECHAT API" + localHost + consts.WECHAT_PORT)
 	common.ConRedis, common.Err = common.ConnectRedis()
 	if common.Err != nil {
-		log.Println("WECHAT API 连接redis失败")
+		tools.OutPutInfo(nil,"WECHAT API 连接redis失败")
 		os.Exit(1)
 	}
 
@@ -98,6 +57,11 @@ func main() {
 	//增加客服
 	http.HandleFunc("/addKfAccount", controller.WxAddKfAccount)
 
-	log.Println("WECHAT API启动成功，监听中...")
+	//图片识别完毕
+	//为朋友圈活动的指定openid，发送客服消息，让其进行下一步活动。
+	http.HandleFunc("/addPyqScore", controller.WxActivityPYQAddScore)
+
+	tools.OutPutInfo(nil,"WECHAT API启动成功，监听中...")
+
 	server.ListenAndServe()
 }

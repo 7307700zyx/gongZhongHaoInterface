@@ -2,22 +2,25 @@ package controllers
 
 import (
 	"fmt"
+	tools "gitlab.wsmfin.com/DEV/GoLangTools"
+
 	//"fmt"
 	"github.com/beevik/etree"
 	"gongZhongHaoInterface/common"
 	consts "gongZhongHaoInterface/conf"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
 func textMsg(w http.ResponseWriter, RequestBody string) {
+	msg_type_str := "【文本消息】-"
+	tools.OutPutInfo(nil,msg_type_str+"xml内容:"+RequestBody)
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(RequestBody); err != nil {
-		w.Write([]byte("success"))
+		tools.OutPutInfo(nil,msg_type_str+" 系统异常，xml内容解析失败:"+RequestBody)
+		return
 	}
 	var Content string
-	//var MsgId string
 	var MsgToUserName string
 	var MsgFromUserName string
 	for _, xmls := range doc.SelectElements("xml") {
@@ -31,95 +34,170 @@ func textMsg(w http.ResponseWriter, RequestBody string) {
 			MsgFromUserName = msg_FromUserName.Text()
 		}
 	}
-	productInooSql := "SELECT * FROM media WHERE keyword = '" + Content + "' LIMIT 0,1"
-	fmt.Println(productInooSql)
-	result, err := common.MysqlQuery("", "", "", "", "", productInooSql, consts.MYSQL_DSN)
+	tools.OutPutInfo(nil,msg_type_str+"xml内容解析成功:用户openid："+MsgFromUserName+",发送内容："+Content)
+
+	//if(Content == "kftext"){
+	//	WxKfSend("text","这里是客服发送text消息",MsgFromUserName,MsgToUserName)
+	//	return
+	//}
+	//if(Content == "kftvoice"){
+	//	WxKfSend("voice","这里是客服发送voice消息",MsgFromUserName,MsgToUserName)
+	//	return
+	//}
+	//if(Content == "kfvideo"){
+	//	WxKfSend("video","这里是客服发送video消息",MsgFromUserName,MsgToUserName)
+	//	return
+	//}
+	//if(Content == "kfimage"){
+	//	WxKfSend("image","这里是客服发送image消息",MsgFromUserName,MsgToUserName)
+	//	return
+	//}
+	//if(Content == "kfmpnews"){
+	//	WxKfSend("news","这里是客服发送news消息",MsgFromUserName,MsgToUserName)
+	//	return
+	//}
+
+	keyWordSql := "SELECT * FROM fa_media WHERE keyword = '" + Content + "' LIMIT 0,1"
+	fmt.Println(keyWordSql)
+	result, err := common.MysqlQuery("", "", "", "", "", keyWordSql, consts.MYSQL_DSN)
 	if err != nil {
-		fmt.Println(err)
+		tools.OutPutInfo(err,msg_type_str+"查询关键字表查询失败，关键字："+Content+"，异常sql："+keyWordSql)
 		return
 	}
 
+	//如果不是关键字，判断是否是参加活动
 	var xmlStr string
 	resCnt := len(result)
 	if resCnt <= 0 {
-		fmt.Println("未找到对应关键字")
+		tools.OutPutInfo(err,msg_type_str+Content+"不在关键字列表中，查看是否是活动内的关键字")
+		WxActivityText(w,MsgFromUserName,MsgToUserName ,Content)
 		return
 	}
 	res := result[0]
-	fmt.Println(res)
+	tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，查看关键字详情：",res)
 	if res["type"] != "" {
 		if res["type"] == "news" {
-			xmlStr = common.ReplyNews(MsgFromUserName, MsgToUserName, res["title"], res["description"], res["picUrl"], res["url"])
+			tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，回复内容为【图文】类型，发送客服消息：",res)
+			//xmlStr = common.ReplyNews(MsgFromUserName, MsgToUserName, res["title"], res["description"], res["picUrl"], res["url"])
+			WxKfSend("news",res["media_id"],MsgFromUserName,MsgToUserName)
 		}
 		if res["type"] == "voice" {
+			tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，回复内容为【音频】类型：",res)
 			xmlStr = common.ReplyVoice(MsgFromUserName, MsgToUserName, res["media_id"])
 		}
 		if res["type"] == "image" {
+			tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，回复内容为【图片】类型：",res)
 			xmlStr = common.ReplyImg(MsgFromUserName, MsgToUserName, res["media_id"])
 		}
 		if res["type"] == "text" {
+			tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，回复内容为【文本】类型：",res)
 			xmlStr = common.ReplyText(MsgFromUserName, MsgToUserName, res["title"])
 		}
 		if res["type"] == "video" {
+			tools.OutPutInfo(err,msg_type_str+Content+"在关键字列表中，回复内容为【视频】类型：",res)
 			xmlStr = common.ReplyVideo(MsgFromUserName, MsgToUserName, res["media_id"], res["title"], res["description"])
 		}
 
+		tools.OutPutInfo(err,msg_type_str+"在关键字列表中，回复内容为【视频】类型，完整XML：",xmlStr)
 		w.Write([]byte(xmlStr))
 	}
 }
 
 func imgMsg(w http.ResponseWriter, RequestBody string) {
+	msg_type_str := "【图片消息】-"
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(RequestBody); err != nil {
-		//fmt.Println(err)
-		w.Write([]byte("success"))
+		tools.OutPutInfo(nil,msg_type_str+" 系统异常，xml内容读取失败:"+RequestBody)
+		return
 	}
 	var PicUrl string
 	var MediaId string
+	var MsgFromUserName string
+	var MsgToUserName string
 	for _, xmls := range doc.SelectElements("xml") {
 		if msg_picurl := xmls.SelectElement("PicUrl"); msg_picurl != nil {
-			//fmt.Println(msg_picurl.Text())
-			//"WECHAT API 连接redis失败"
 			PicUrl = msg_picurl.Text()
 		}
 		if msg_mediaid := xmls.SelectElement("MediaId"); msg_mediaid != nil {
-			//fmt.Println(msg_mediaid.Text())
 			MediaId = msg_mediaid.Text()
 		}
+		if msg_FromUserName := xmls.SelectElement("FromUserName"); msg_FromUserName != nil {
+			MsgFromUserName = msg_FromUserName.Text()
+		}
+		if msg_ToUserName := xmls.SelectElement("ToUserName"); msg_ToUserName != nil {
+			MsgToUserName = msg_ToUserName.Text()
+		}
 	}
-	log.Println(PicUrl)
-	log.Println(MediaId)
-	//fmt.Println(PicUrl)
-	//fmt.Println(MediaId)
-	//fmt.Println("----------imgMsg  msg_type_str------------")
-	w.Write([]byte("123123123"))
+
+	tools.OutPutInfo(nil,msg_type_str+"查看是否是活动内的操作步骤")
+	WxActivityImage(w,MsgFromUserName,MsgToUserName , PicUrl,MediaId)
+	return
 }
 
 func voiceMsg(w http.ResponseWriter, RequestBody string) {
-	//fmt.Println("----------voiceMsg------------")
+	msg_type_str := "【音频消息】-"
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(RequestBody); err != nil {
+		tools.OutPutInfo(nil,msg_type_str+" 系统异常，xml内容读取失败:"+RequestBody)
+		return
+	}
+	var MsgFromUserName string
+	var MsgToUserName string
+	for _, xmls := range doc.SelectElements("xml") {
+		if msg_FromUserName := xmls.SelectElement("FromUserName"); msg_FromUserName != nil {
+			MsgFromUserName = msg_FromUserName.Text()
+		}
+		if msg_ToUserName := xmls.SelectElement("ToUserName"); msg_ToUserName != nil {
+			MsgToUserName = msg_ToUserName.Text()
+		}
+	}
+	xmlStr := common.ReplyTextCommon(MsgFromUserName,MsgToUserName)
+	tools.OutPutInfo(nil,msg_type_str+"调用默认回复的完整XML：",xmlStr)
+	w.Write([]byte(xmlStr))
 }
+
 func videoMsg(w http.ResponseWriter, RequestBody string) {
-	//fmt.Println("----------videoMsg------------")
+	msg_type_str := "【视频消息】-"
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(RequestBody); err != nil {
+		tools.OutPutInfo(nil,msg_type_str+" 系统异常，xml内容读取失败:"+RequestBody)
+		return
+	}
+	var MsgFromUserName string
+	var MsgToUserName string
+	for _, xmls := range doc.SelectElements("xml") {
+		if msg_FromUserName := xmls.SelectElement("FromUserName"); msg_FromUserName != nil {
+			MsgFromUserName = msg_FromUserName.Text()
+		}
+		if msg_ToUserName := xmls.SelectElement("ToUserName"); msg_ToUserName != nil {
+			MsgToUserName = msg_ToUserName.Text()
+		}
+	}
+	xmlStr := common.ReplyTextCommon(MsgFromUserName,MsgToUserName)
+	tools.OutPutInfo(nil,msg_type_str+"调用默认回复的完整XML：",xmlStr)
+	w.Write([]byte(xmlStr))
 }
 
 func WxMsg(w http.ResponseWriter, r *http.Request) {
 	common.AccessToken, common.Err = common.GetAccessToken(common.ConRedis)
 	if common.Err != nil {
-		w.Write([]byte("123123123"))
+		tools.OutPutInfo(common.Err,"获取token失败")
+		w.Write([]byte("获取token失败"))
 		return
 	}
 
 	if r.Method == "POST" {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.Fatal(err)
-			w.Write([]byte("123123123"))
+			tools.OutPutInfo(err,"读取传送的数据失败")
+			w.Write([]byte("读取传送的数据失败"))
 			return
 		}
 		msg_xml := string(body)
 		doc := etree.NewDocument()
 		if err := doc.ReadFromString(msg_xml); err != nil {
-			w.Write([]byte("123123123"))
+			tools.OutPutInfo(err,"解析用户发送的信息失败")
+			w.Write([]byte("解析用户发送的信息失败"))
 			return
 		}
 		var msg_type_str string
@@ -128,6 +206,9 @@ func WxMsg(w http.ResponseWriter, r *http.Request) {
 				msg_type_str = msg_type.Text()
 			}
 		}
+		tools.OutPutInfo(nil,"msg_type_str:"+msg_type_str)
+		tools.OutPutInfo(nil,"=====================================")
+
 		switch msg_type_str {
 		case consts.MESSAGE_TEXT:
 			textMsg(w, msg_xml)
@@ -144,6 +225,6 @@ func WxMsg(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Write([]byte("123123123"))
 	return
 }
+

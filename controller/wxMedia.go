@@ -72,7 +72,6 @@ func WxMediaList(offset string, count string, media_type string) bool {
 	b_medis, _ := json.Marshal(medis)
 	s_medis := string(b_medis)
 	jsonArray := tools.SendPostRequstJson(getMedisCountUri, s_medis)
-	fmt.Println("------------start-----------------")
 
 	fmt.Println(jsonArray)
 
@@ -122,7 +121,7 @@ func WxMediaList(offset string, count string, media_type string) bool {
 	fmt.Println("------------end-----------------")
 	fmt.Println(dataSlice)
 
-	_, err, strSqlTmp := common.InsertAll(consts.MYSQL_DSN, "media", dataSlice)
+	_, err, strSqlTmp := common.InsertAll(consts.MYSQL_DSN, "fa_media", dataSlice)
 	fmt.Println(err)
 	fmt.Println(strSqlTmp)
 	if err != nil {

@@ -3,11 +3,12 @@ package controllers
 import (
 	"crypto/sha1"
 	"fmt"
+	tools "gitlab.wsmfin.com/DEV/GoLangTools"
+
 	//"localHost"
 	consts "gongZhongHaoInterface/conf"
 	//controller "gongZhongHaoInterface/controller"
 	"io"
-	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -28,39 +29,28 @@ func validateUrl(w http.ResponseWriter, r *http.Request) bool {
 	nonce := strings.Join(r.Form["nonce"], "")
 	signature := strings.Join(r.Form["signature"], "")
 	echostr := strings.Join(r.Form["echostr"], "")
-	fmt.Println("-----------------------------")
+	//fmt.Println("-----------------------------")
 
-	fmt.Println(signature)
+	//fmt.Println(signature)
 
 	signatureGen := makeSignature(timestamp, nonce)
-	fmt.Println(signatureGen)
-	fmt.Println("-----------------------------")
+	//fmt.Println(signatureGen)
+	//fmt.Println("-----------------------------")
 	if signatureGen != signature {
 		return false
 	}
-	fmt.Fprintf(w, echostr) //原样返回eechostr给微信服务器
+	fmt.Println(echostr)
+	//fmt.Fprintf(w, echostr) //原样返回eechostr给微信服务器
 	return true
 }
 
 func WxConnect(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //Request需要解析
 	if !validateUrl(w, r) {
-		log.Println("Wechat Service: This http request is not from wechat platform")
+		tools.OutPutInfo(nil,"Wechat Service: This http request is not from wechat platform")
 		return
 	}
-	log.Println("validateUrl Ok")
-	//WxMediaList(w, r)
-	fmt.Println("---------------------")
+	tools.OutPutInfo(nil,"validateUrl Ok")
 	WxMsg(w, r)
 
 }
-
-//func main() {
-//	log.Println("Wechat Service: Start!")
-//	http.HandleFunc("/", procSignature)
-//	err := http.ListenAndServe(":80", nil)
-//	if err != nil {
-//		log.Println("Wechat Service: ListenAndServe Error: ", err)
-//	}
-//	log.Println("Wechat Service: Stop!")
-//}

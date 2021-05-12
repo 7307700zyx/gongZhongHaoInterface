@@ -47,10 +47,10 @@ func validateUrl(w http.ResponseWriter, r *http.Request) bool {
 func WxConnect(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //Request需要解析
 	if !validateUrl(w, r) {
-		tools.OutPutInfo(nil,"Wechat Service: This http request is not from wechat platform")
+		tools.OutPutInfo(nil, "Wechat Service: This http request is not from wechat platform")
 		return
 	}
-	tools.OutPutInfo(nil,"validateUrl Ok")
+	//tools.OutPutInfo(nil,"validateUrl Ok")
 	WxMsg(w, r)
 
 }

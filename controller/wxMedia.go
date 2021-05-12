@@ -33,14 +33,14 @@ func WxMediaCount(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	//{"voice_count":0,"video_count":0,"image_count":0,"news_count":0}
-	voice_count := gjson.Get(res, "voice_count").String()
-	video_count := gjson.Get(res, "video_count").String()
-	image_count := gjson.Get(res, "image_count").String()
-	news_count := gjson.Get(res, "news_count").String()
-	common.ConRedis.Set("voice_count", voice_count, 0)
-	common.ConRedis.Set("video_count", video_count, 0)
-	common.ConRedis.Set("image_count", image_count, 0)
-	common.ConRedis.Set("news_count", news_count, 0)
+	voice_count := gjson.Get(res, consts.REDIS_KEY_MEDIS_VOICE).String()
+	video_count := gjson.Get(res, consts.REDIS_KEY_MEDIS_VIDEO).String()
+	image_count := gjson.Get(res, consts.REDIS_KEY_MEDIS_IMAGE).String()
+	news_count := gjson.Get(res, consts.REDIS_KEY_MEDIS_NEWS).String()
+	common.ConRedis.Set(consts.REDIS_KEY_MEDIS_VOICE, voice_count, 0)
+	common.ConRedis.Set(consts.REDIS_KEY_MEDIS_VIDEO, video_count, 0)
+	common.ConRedis.Set(consts.REDIS_KEY_MEDIS_IMAGE, image_count, 0)
+	common.ConRedis.Set(consts.REDIS_KEY_MEDIS_NEWS, news_count, 0)
 
 	w.Write([]byte(res))
 	fmt.Println(err)

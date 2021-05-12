@@ -9,44 +9,54 @@ const PAGE_OFFSET int = 0
 
 const ACCESS_TOKEN string = "access_token" //redis保存key
 
-
 const REDIS_KEY_MEDIS_VOICE string = "voice_count"
 const REDIS_KEY_MEDIS_VIDEO string = "video_count"
 const REDIS_KEY_MEDIS_IMAGE string = "image_count"
 const REDIS_KEY_MEDIS_NEWS string = "news_count"
 
-
 //进程API相关
 
-const WECHAT_PATH string = `.\`         //守护进程执行文件放置路径
-const WECHAT_LOG string = "weichat.log" //守护进程log日志文件放置路径
-
-
 //微信配置相关（测试）
-const WECHAT_PORT string = ":8088"      //工作端端口号
-const FWH_OPENID string = " gh_819c9ce0b8cf" //服务号的微信号(测试)
-const APP_ID string = "wx461ebe61665c0054" //测试，app_id
-const SECRET  string = "900648ce0c0da8fa37960b8e8d2a3825" //测试第三方用户唯一凭证密钥，即appsecret
-const TOKEN  string = "fizG8qUYget4aMafWcI6UlGXrPEyC68C"
-const REDIS_PWD string = "123456"
-const REDIS_PROT string = "6379"
+//const WECHAT_PORT string = ":8088"      //工作端端口号
+//const FWH_OPENID string = " gh_819c9ce0b8cf" //服务号的微信号(测试)
+//const APP_ID string = "wx461ebe61665c0054" //测试，app_id
+//const SECRET  string = "900648ce0c0da8fa37960b8e8d2a3825" //测试第三方用户唯一凭证密钥，即appsecret
+//const TOKEN  string = "fizG8qUYget4aMafWcI6UlGXrPEyC68C"
+//const REDIS_PWD string = "123456"
+//const REDIS_PROT string = "6379"
+//const REDIS_HOST_KEY string = "redisHost" //工作端配置文件内rediskey
+//const REDIS_HOST string = "10.1.49.37"    //中心端redis地址
+//const REDIS_CONN_TIMES int = 10           //redis尝试重连次数
+
+//================================================
+
+//微信配置相关（预警平台）
+const WECHAT_PORT string = ":80"                         //工作端端口号
+const FWH_OPENID string = "gh_0c7aab3fb892"              //服务号的微信号
+const APP_ID string = "wx3f95cdc15cdeaf44"               //app_id
+const SECRET string = "3c64871728e063bd691c075c04656567" //第三方用户唯一凭证密钥，即appsecret
+const TOKEN string = "fizG8qUYget4aMafWcI6UlGXrPEyC68C"
+const REDIS_PWD string = "xykj1234"
+const REDIS_PROT string = "6380"
 const REDIS_HOST_KEY string = "redisHost" //工作端配置文件内rediskey
-const REDIS_HOST string = "10.1.49.37"    //中心端redis地址
+const REDIS_HOST string = "127.0.0.1"     //中心端redis地址
 const REDIS_CONN_TIMES int = 10           //redis尝试重连次数
 
+//================================================
 
-//微信配置相关（生产）
+////微信配置相关（生产环境）
 //const WECHAT_PORT string = ":80"      //工作端端口号
-//const FWH_OPENID string = "gh_0c7aab3fb892" //服务号的微信号
-//const APP_ID string = "wx3f95cdc15cdeaf44"               //app_id
-//const SECRET string = "3c64871728e063bd691c075c04656567" //第三方用户唯一凭证密钥，即appsecret
-//const TOKEN string = "fizG8qUYget4aMafWcI6UlGXrPEyC68C"
+//const FWH_OPENID string = "gh_105a8479658f" //服务号的微信号
+//const APP_ID string = "wxc23964fb0836fcff"               //app_id
+//const SECRET string = "7c3ba3e7685b65167f3ac7f1934d5d7d" //第三方用户唯一凭证密钥，即appsecret
+//const TOKEN string = "Cw9cZusvkBtFsH5ZuHu2WUa9Kp9zTtCw"
 //const REDIS_PWD string = "xykj1234"
 //const REDIS_PROT string = "6380"
 //const REDIS_HOST_KEY string = "redisHost" //工作端配置文件内rediskey
 //const REDIS_HOST string = "127.0.0.1"    //中心端redis地址
 //const REDIS_CONN_TIMES int = 10           //redis尝试重连次数
 
+//================================================
 
 const GRANT_TYPE int = 1 //获取access_token填写client_credential
 
@@ -76,8 +86,6 @@ const ADD_KF_ACCOUNT_URI string = "https://api.weixin.qq.com/customservice/kfacc
 
 //客服发送消息 POST https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=ACCESS_TOKEN
 const KF_SEND_URI string = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token="
-
-
 
 // 各种消息类型,除了扫带二维码事件
 /**

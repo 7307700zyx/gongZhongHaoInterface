@@ -18,10 +18,11 @@ var ConRedis *redis.Client
 
 //设置全局的error句柄
 var Err error
+
 //var MyLogger tools.WriteLogFile("./wx_blog", "")
 var AccessToken string
 
-func GetSPDJDetail()([]string,string,[]map[string]map[string]string){
+func GetSPDJDetail() ([]string, string, []map[string]map[string]string) {
 	dataSlice := make([]map[string]map[string]string, 0) //初始化数据切片
 
 	prizeMap1 := make(map[string]map[string]string)
@@ -72,13 +73,13 @@ func GetSPDJDetail()([]string,string,[]map[string]map[string]string){
 	prizeCodeList := make([]string, 0, len(dataSlice))
 
 	for i := 0; i < len(dataSlice); i++ {
-		for k,v := range dataSlice[i] {
+		for k, v := range dataSlice[i] {
 			prizeCodeList = append(prizeCodeList, k)
-			prizeDetailStr = prizeDetailStr + k+"："+v["name"]+" "+v["cost"]+"碎片\n"
+			prizeDetailStr = prizeDetailStr + k + "：" + v["name"] + " " + v["cost"] + "碎片\n"
 		}
 	}
 
-	return prizeCodeList,prizeDetailStr,dataSlice
+	return prizeCodeList, prizeDetailStr, dataSlice
 }
 func ConnectRedis() (*redis.Client, error) {
 	redisHost := consts.REDIS_HOST
@@ -126,7 +127,6 @@ func ReplyTextCommon(MsgFromUserName string, MsgToUserName string) string {
 	res := ReplyText(MsgFromUserName, MsgToUserName, consts.REPLY_TEXT_COMMON)
 	return res
 }
-
 
 func ReplyImg(MsgFromUserName string, MsgToUserName string, media_id string) string {
 	create_doc := etree.NewDocument()
@@ -267,7 +267,7 @@ func MysqlQuery(sqlWhere string, sqlOrder string, sqlLimit string, sqlTable stri
 	//db, err := sql.Open(driverName, dataSourceName)
 	db, err := ConMysql(strDsn)
 	if err != nil {
-		tools.OutPutInfo(nil,"连接数据库失败", err.Error())
+		tools.OutPutInfo(nil, "连接数据库失败", err.Error())
 		return nil, err
 	}
 	defer db.Close()
@@ -279,7 +279,7 @@ func MysqlQuery(sqlWhere string, sqlOrder string, sqlLimit string, sqlTable stri
 	//查询数据库
 	query, err := db.Query(sqlQuery)
 	if err != nil {
-		tools.OutPutInfo(nil,"查询数据库失败", err.Error())
+		tools.OutPutInfo(nil, "查询数据库失败", err.Error())
 		return nil, err
 	}
 	defer query.Close()
@@ -549,113 +549,110 @@ func ReplaceIntoAll(strDsn string, table_name string, data []map[string]string) 
 	return data_len, nil, ""
 }
 
-func GetActivity(act_name string,open_id string) map[string]string {
+func GetActivity(act_name string, open_id string) map[string]string {
 	find_user_activity_sql := "SELECT * FROM fa_customer_activity " +
-		"WHERE open_id='"+open_id+"' AND act_name = '"+act_name+"'"
+		"WHERE open_id='" + open_id + "' AND act_name = '" + act_name + "'"
 	result, _ := MysqlQuery("", "", "", "", "", find_user_activity_sql, consts.MYSQL_DSN)
 	resCnt := len(result)
-	if resCnt == 0{
+	if resCnt == 0 {
 		return map[string]string{}
 	}
 	return result[0]
 }
 
-func GetCustomer(open_id string,phone_num string) (map[string]string,bool) {
+func GetCustomer(open_id string, phone_num string) (map[string]string, bool) {
 	find_user_sql := "SELECT * FROM fa_customer " +
-		"WHERE openid='"+open_id+"' AND phone = '"+phone_num+"'"
+		"WHERE openid='" + open_id + "' AND phone = '" + phone_num + "'"
 	fmt.Println(find_user_sql)
 	result, _ := MysqlQuery("", "", "", "", "", find_user_sql, consts.MYSQL_DSN)
 	resCnt := len(result)
-	if resCnt == 0{
-		return map[string]string{},false
+	if resCnt == 0 {
+		return map[string]string{}, false
 	}
-	return result[0] , true
+	return result[0], true
 }
 
-func GetSecretKeys() (map[string]string,bool) {
+func GetSecretKeys(prize_code string) (map[string]string, bool) {
 	find_secret_keys_sql := "SELECT * FROM fa_secret_keys " +
-		"WHERE status=1"
+		"WHERE status=1 AND type = '" + prize_code + "'"
 	result, _ := MysqlQuery("", "", "", "", "", find_secret_keys_sql, consts.MYSQL_DSN)
 	resCnt := len(result)
-	if resCnt == 0{
-		return map[string]string{},false
+	if resCnt == 0 {
+		return map[string]string{}, false
 	}
 
 	//用户表：修改用户积分
-	set_secret_keys_sql := " UPDATE fa_secret_keys SET status = 2 " +"WHERE id = "+ result[0]["id"]
+	set_secret_keys_sql := " UPDATE fa_secret_keys SET status = 2 " + "WHERE id = " + result[0]["id"]
 	_, err := MysqlExec(set_secret_keys_sql, consts.MYSQL_DSN)
-	if err != nil{
-		return map[string]string{},false
+	if err != nil {
+		return map[string]string{}, false
 	}
-	return result[0],true
+	return result[0], true
 }
 
-func AddCustomer(open_id string,phone_num string) bool{
+func AddCustomer(open_id string, phone_num string) bool {
 	find_customer_sql := "SELECT * FROM fa_customer " +
-		"WHERE phone = '"+phone_num+"'"
-	fmt.Println(find_customer_sql)
+		"WHERE phone = '" + phone_num + "'"
 	result, _ := MysqlQuery("", "", "", "", "", find_customer_sql, consts.MYSQL_DSN)
 	resCnt := len(result)
-	if resCnt == 0{
-		add_customer_sql := "INSERT fa_customer (openid,phone,score) VALUES ('"+open_id+"','"+phone_num+"',0)"
+	if resCnt == 0 {
+		add_customer_sql := "INSERT fa_customer (openid,phone,score) VALUES ('" + open_id + "','" + phone_num + "',0)"
 		_, err := MysqlExec(add_customer_sql, consts.MYSQL_DSN)
-		if err != nil{
-			tools.OutPutInfo(nil,"创建新用户失败：" + add_customer_sql)
+		if err != nil {
+			tools.OutPutInfo(nil, "创建新用户失败："+add_customer_sql)
 			return false
 		}
 	}
 	return true
 }
 
-func ActivityPyqAddScore(open_id string,content string)(string,bool){
+func ActivityPyqAddScore(open_id string, content string) (string, bool) {
 	//活动状态校验，并判断是否是已经活动结束状态
 	//today := tools.GetCurrentStringDateFormat(tools.GetCurrentStringDate())
 	today := tools.GetCurrentStringDateFormat("2006-01-02")
 	find_user_activity_sql := "SELECT * FROM fa_customer_activity " +
-		"WHERE open_id='"+open_id+"' AND phone_num = '"+content+"'  AND date_format(upd_timestamp,'%Y-%m-%d') = '"+today +"'"+
-		" AND act_name = '"+consts.ACTIVITY_PYQ+"'"
-	fmt.Println(find_user_activity_sql)
+		"WHERE open_id='" + open_id + "' AND phone_num = '" + content + "'  AND date_format(upd_timestamp,'%Y-%m-%d') = '" + today + "'" +
+		" AND act_name = '" + consts.ACTIVITY_PYQ + "'"
+
 	result, _ := MysqlQuery("", "", "", "", "", find_user_activity_sql, consts.MYSQL_DSN)
 	resCnt := len(result)
 	//当天已经有数据，并且是完结状态，不可以继续此活动
 	if resCnt > 0 {
 		//已经完结状态了，不允许继续参加
 		if result[0]["final_result"] == "2" {
-			tools.OutPutInfo(nil,"用户当天活动已经完成，并且分数已经增加，无法重复增加")
-			return  "小可爱这个任务您已经兑换过碎片啦~",false
+			tools.OutPutInfo(nil, "用户当天活动已经完成，并且分数已经增加，无法重复增加")
+			return "小可爱这个任务您已经兑换过碎片啦~", false
 		}
 	}
-	if result[0]["step"] == "3" && result[0]["img_check"] == "2"{
+	if result[0]["step"] == "3" && result[0]["img_check"] == "2" {
 		//		step4-4-3：校验通过
 		//				   修改数据	(1)用户表：增加积分
 		//	step4-3：修改数据库状态，step=3
-		customer_add_score_sql := " UPDATE fa_customer SET score=score+"+consts.PYQ_SCORE+
-			" WHERE openid = '"+open_id+"' AND phone = '"+content+"'"
-		fmt.Println(customer_add_score_sql)
+		customer_add_score_sql := " UPDATE fa_customer SET score=score+" + consts.PYQ_SCORE +
+			" WHERE openid = '" + open_id + "' AND phone = '" + content + "'"
 		_, err := MysqlExec(customer_add_score_sql, consts.MYSQL_DSN)
-		if err != nil{
-			tools.OutPutInfo(nil,"为用户增加积分失败：" + customer_add_score_sql)
-			return "系统错误，请重新发送手机号",false
+		if err != nil {
+			tools.OutPutInfo(nil, "为用户增加积分失败："+customer_add_score_sql)
+			return "系统错误，请重新发送手机号", false
 		}
 		//				   			（2）用户活动表：final_result=2，score=xx
-		customer_activity_step_sql := " UPDATE fa_customer_activity SET step=3,score="+consts.PYQ_SCORE+",final_result = 2"+
-			" WHERE act_name = '"+consts.ACTIVITY_PYQ +"' AND open_id = '"+open_id+"'"
-		fmt.Println(customer_activity_step_sql)
+		customer_activity_step_sql := " UPDATE fa_customer_activity SET step=3,score=" + consts.PYQ_SCORE + ",final_result = 2" +
+			" WHERE act_name = '" + consts.ACTIVITY_PYQ + "' AND open_id = '" + open_id + "'"
 		_, err = MysqlExec(customer_activity_step_sql, consts.MYSQL_DSN)
-		if err != nil{
-			tools.OutPutInfo(nil,"用户参与朋友圈活动，为用户增加积分 失败：" + customer_activity_step_sql)
-			return "系统错误，请重新发送手机号",false
+		if err != nil {
+			tools.OutPutInfo(nil, "用户参与朋友圈活动，为用户增加积分 失败："+customer_activity_step_sql)
+			return "系统错误，请重新发送手机号", false
 		}
-		return "success",true
-	}else{
-		tools.OutPutInfo(nil,"用户当天活动图片验证与手机号步骤未完成，无法增加积分")
+		return "success", true
+	} else {
+		tools.OutPutInfo(nil, "用户当天活动图片验证与手机号步骤未完成，无法增加积分")
 		return "系统错误，请重新发送手机号", false
 	}
 }
 
 //朋友圈图片截图识别
 //TODO
-func VerImg(imgUrl,openid string)error{
+func VerImg(imgUrl, openid string) error {
 	return nil
 }
 
@@ -690,19 +687,19 @@ func GetAccessToken(redis *redis.Client) (string, error) {
 		"?grant_type=" + consts.GrantTypeToType(consts.GRANT_TYPE) +
 		"&appid=" + consts.APP_ID +
 		"&secret=" + consts.SECRET
-	tools.OutPutInfo(nil,"====================读取redis内的token-开始============================")
-	tools.OutPutInfo(nil,"请求地址为："+get_accesstoken_uri)
+	//tools.OutPutInfo(nil,"====================读取redis内的token-开始============================")
+	//tools.OutPutInfo(nil,"请求地址为："+get_accesstoken_uri)
 	AccessToken, Err = WxGet(redis, consts.ACCESS_TOKEN)
-	tools.OutPutInfo(nil,"token取值为："+AccessToken)
-	tools.OutPutInfo(nil,"====================读取redis内的token-结束============================")
+	//tools.OutPutInfo(nil,"token取值为："+AccessToken)
+	//tools.OutPutInfo(nil,"====================读取redis内的token-结束============================")
 
-	if AccessToken == "" || len(AccessToken)==0  {
+	if AccessToken == "" || len(AccessToken) == 0 {
 		AccessToken_json, Err := tools.HttpGet(get_accesstoken_uri)
-		fmt.Println(AccessToken_json)
-		tools.OutPutInfo(nil,"请求url返回值为："+AccessToken)
+		//fmt.Println(AccessToken_json)
+		tools.OutPutInfo(nil, "请求url返回值为："+AccessToken_json)
 
 		AccessToken = gjson.Get(AccessToken_json, "access_token").String()
-		fmt.Println(AccessToken)
+		//fmt.Println(AccessToken)
 		_, Err = WxSet(redis, consts.ACCESS_TOKEN, AccessToken, time.Duration(7200)*time.Second)
 		if Err != nil {
 			return "", Err
